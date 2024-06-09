@@ -1,2 +1,2 @@
-# Linux-s-code
+# Linux code
 some codes on Linux
