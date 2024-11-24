@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        printf("fault enter!\n");
+        printf("fault enter, not have this section!\n");
     }
 
     //1. view argv[]
