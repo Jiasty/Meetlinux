@@ -1,5 +1,5 @@
-addSpace:addSpace.c
+WaitProc:WaitProc.c
 	gcc -o $@ $^ -std=c99
 .PHONY:clean
 clean:
-	rm -f addSpace
+	rm -f WaitProc
