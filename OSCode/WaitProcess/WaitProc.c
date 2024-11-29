@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "taskList.c"
+#include "taskList.c" //?
 
 #define TASKNUM 3
 
@@ -19,12 +19,17 @@ void LoadTask()
     taskList[2] = task3;
 }
 
-void DoOtherThings()
+void Handler()
 {
     for(int i = 0; i < TASKNUM; i++)
     {
         taskList[i](); //函数回调。回顾一下函数指针如何调用
     }
+}
+
+void DoOtherThings()
+{
+    Handler();
 }
 
 void WaitNoHang()
@@ -36,17 +41,18 @@ void WaitNoHang()
     else if (id == 0)
     {
         // CHILD
-        printf("CHILD quit...\n");
         sleep(3);
+        printf("CHILD quit...\n");
         exit(1);
     }
 
     // PARENT
     LoadTask();
     int status = 0;
-    pid_t ret = waitpid(id, &status, WNOHANG); // WNOHANG非阻塞等待
+    
     while (1)
     {
+        pid_t ret = waitpid(id, &status, WNOHANG); // WNOHANG非阻塞等待
         if (ret < 0)
         {
             printf("wait failed!\n");
@@ -64,6 +70,7 @@ void WaitNoHang()
             sleep(1);
             printf("CHILD is running, wait next time!\n");
             DoOtherThings();
+            //疑问：如果任务太大，会一直卡在这里执行吗？会的，但是好像影响不大，只要下此等待子进程时成功就好了？
         }
     }
 }

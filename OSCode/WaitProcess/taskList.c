@@ -1,9 +1,11 @@
 #include<stdio.h>
+#include<unistd.h>
 #include"taskList.h"
 
 void task1()
 {
     printf("This is the first task!\n");
+    //sleep(100);
 }
 
 void task2()
