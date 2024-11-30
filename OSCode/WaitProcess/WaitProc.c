@@ -70,7 +70,7 @@ void WaitNoHang()
             sleep(1);
             printf("CHILD is running, wait next time!\n");
             DoOtherThings();
-            //疑问：如果任务太大，会一直卡在这里执行吗？会的，但是好像影响不大，只要下此等待子进程时成功就好了？
+            //疑问：如果任务太大，会一直卡在这里执行吗？会的
         }
     }
 }
