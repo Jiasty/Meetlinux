@@ -15,6 +15,42 @@ const char *filename = "log.txt";
 
 void Redirect()
 {
+    // // C
+    // printf("hello printf\n");
+    // fprintf(stdout, "hello fprintf\n");
+    // // system call
+    // const char *msg = "hello write\n";
+    // write(1, msg, strlen(msg));
+    // fork(); //???
+
+    // int fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+    // int fd = open(filename, O_CREAT | O_WRONLY | O_APPEND, 0666);
+    int fd = open("/dev/pts/2", O_CREAT | O_WRONLY | O_TRUNC, 0666); //向另外一个中断打印
+    if(fd < 0)
+    {
+       perror("open");
+       return;
+    }
+    dup2(fd, 1); //使用系统调用实现重定向
+    printf("hello world\n");
+    fprintf(stdout, "hello world\n");
+    fflush(stdout);
+
+    // //close(0);
+    // //close(2);
+    // //close(1); //手动关闭1，实现重定向
+    // int fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+    // if(fd < 0)
+    // {
+    //    perror("open");
+    //    return;
+    // }
+
+    // printf("printf, fd: %d\n", fd);
+    // fprintf(stdout, "fprintf, fd: %d\n", fd);
+    // fflush(stdout); //当关闭1后fd分配为了1，此时打印数据就是往log.txt里打印，但是最先是在语言级缓冲区，需要刷新一下。
+
+    close(fd);
 }
 
 void GetFileInfo()
@@ -24,7 +60,7 @@ void GetFileInfo()
     write(fd1, message, strlen(message));
     close(fd1);
 
-    struct stat st;
+    struct stat st; //输出型参数，stat()函数调用后将文件属性信息存入struct stat对象中
     if (stat(filename, &st) != 0) return;
     printf("file size: %lu\n", st.st_size);
 
@@ -32,7 +68,7 @@ void GetFileInfo()
     if (fd2 < 0) return;
 
     char *file_buffer = (char *)malloc(st.st_size + 1); // 定义缓冲区读取文件的内容
-    int n = read(fd2, file_buffer, st.st_size);
+    ssize_t n = read(fd2, file_buffer, st.st_size);
     if (n > 0)
     {
         file_buffer[n] = '\0';
@@ -45,8 +81,7 @@ void GetFileInfo()
 void printForOtherTerminal()
 {
     int fd = open("/dev/pts/1", O_WRONLY | O_APPEND);
-    if (fd < 0)
-        return;
+    if (fd < 0) return;
 
     const char *message = "hello hello hello!";
     write(fd, message, strlen(message));
