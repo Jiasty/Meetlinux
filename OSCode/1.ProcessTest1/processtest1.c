@@ -7,7 +7,7 @@ void TaskOfChildProcess()
 {
     while(1)
     {
-        printf("id:%d, I am CHILD process, pid:%d, ppid:%d\n", getpid(), getppid());
+        printf(" I am CHILD process, pid:%d, ppid:%d\n", getpid(), getppid());
         sleep(1);
     }
 }
@@ -27,7 +27,7 @@ void createSomeProcess()
 
     while(1)
     {
-        printf("id:%d, I am PARENT process, pid:%d, ppid:%d\n", getpid(), getppid());
+        printf("I am PARENT process, pid:%d, ppid:%d\n", getpid(), getppid());
         sleep(1);
     }
 }
@@ -38,24 +38,18 @@ void test_childProcess()
     sleep(3);
 
     pid_t id = fork();
-    if(id == -1) return;
+    if(id < 0) return;
     else if(id == 0)
     {
         //child process
-        while(1)
-        {
-            printf("id:%d, I am CHILD process, pid:%d, ppid:%d\n", id, getpid(), getppid());
-            sleep(1);
-        }
+        printf("id:%d, I am CHILD process, pid:%d, ppid:%d\n", id, getpid(), getppid());
+        sleep(1);
     }
     else
     {
         //parent process
-        while(1)
-        {
-            printf("id:%d, I am PARENT process, pid:%d, ppid:%d\n", id, getpid(), getppid());
-            sleep(1);
-        }
+        printf("id:%d, I am PARENT process, pid:%d, ppid:%d\n", id, getpid(), getppid());
+        sleep(1);
     }
 }
 
@@ -72,8 +66,8 @@ void test_getpid()
 
 int main()
 {
-    createSomeProcess();
-    //test_childprocess();
+    //createSomeProcess();
+    test_childProcess();
     //test_getpid();
 
     return 0;
