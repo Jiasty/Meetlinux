@@ -1,6 +1,9 @@
 #pragma once
 
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+
 
 #define taskNum 3
 
@@ -26,13 +29,20 @@ task_t tasks[taskNum];
 
 void LoadTasks()
 {
+    srand(time(nullptr) ^ getpid() ^ 18888); //种随机数种子，后续选择任务随机公平。
     tasks[0] = Task1;
     tasks[1] = Task2;
     tasks[2] = Task3;
 }
 
+int SelectTask()
+{
+    //返回任务下标
+    return rand() % taskNum;
+}
+
 void ExcuteTask(int number)
 {
-    if (number < 0 || number > 2) return;
+    if (number < 0 || number > taskNum - 1) return;
     tasks[number]();
 }
