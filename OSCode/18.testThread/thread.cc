@@ -59,21 +59,45 @@ std::string PrintThreadID(pthread_t &tid)
     return buffer;
 }
 
+__thread int gPval = 100;
+
+void *threadRunPrivate(void *arg)
+{
+    while (1)
+    {
+        std::cout << "new thread, gPval: " << gPval << "&gPval: " << &gPval << std::endl;
+        gPval++;
+        sleep(1);
+    }
+    return nullptr;
+}
+
+void testPrivateval()
+{
+    pthread_t tid;
+    pthread_create(&tid, nullptr, threadRunPrivate, (void *)"thread-1");
+    while (1)
+    {
+        std::cout << "main thread gPval: " << gPval << "&gPval: " << &gPval << std::endl;
+        sleep(1);
+    }
+}
+
 void threadrunCpp(std::string name, int num)
 {
-    while(num)
+    while (num)
     {
-        std::cout << name << " num : " << num<< std::endl;
+        std::cout << name << " num : " << num << std::endl;
         num--;
         sleep(1);
-    }   
+    }
 }
 
 void testCppThread()
 {
     std::string name = "thread-1";
     std::thread mythread(threadrunCpp, std::move(name), 10);
-    while(true)
+    while (true)
     {
         std::cout << "main thhread..." << std::endl;
         sleep(1);
@@ -226,7 +250,8 @@ void test1()
 
 int main()
 {
-    testCppThread();
+    testPrivateval();
+    // testCppThread();
     // testMultithread();
     // test2();
     // test1();
