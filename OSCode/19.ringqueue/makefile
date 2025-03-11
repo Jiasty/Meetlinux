@@ -1,5 +1,5 @@
-thread: thread.cc
+ringqueue: test.cc
 	g++ -o $@ $^ -std=c++11 -lpthread
 .PHONY:clean
 clean:
-	rm -f thread
+	rm -f ringqueue
