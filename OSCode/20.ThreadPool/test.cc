@@ -11,7 +11,7 @@ int main()
     // lg.writeMessage("test.cc", 11, DEBUG, "hello %d %s %f", 11, "std", 3.14);
     lg.writeMessage(__FILE__, __LINE__, DEBUG, "hello %d %s %f", 11, "std", 3.14);
     //__FILE__, __LINE__ 可以自动推到哪个文件哪行
-    //但是这种做法还是无法直接使用，还要传参。
+    //但是这种做法还是无法直接使用，还要传替换符。可以用宏。
     lg.SwitchType(FILE);
     // lg.writeMessage("test.cc", 11, DEBUG, "hello %d %s %f", 11, "std", 3.14);
     lg.writeMessage(__FILE__, __LINE__, DEBUG, "hello %d %s %f", 11, "std", 3.14);
