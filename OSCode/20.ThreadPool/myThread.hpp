@@ -1,24 +1,13 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <functional>
 #include <pthread.h>
 
 namespace ThreadMoudle
 {
-    class ThreadData
-    {
-    public:
-        ThreadData(const std::string &name, pthread_mutex_t *lock)
-            : _name(name), _lock(lock)
-        {
-        }
-
-    public:
-        std::string _name;
-        pthread_mutex_t *_lock;
-    };
-
-    typedef void (*func_t)(ThreadData *td); // 定义线程函数的类型,自己调整
+    // typedef void (*func_t)(ThreadData *td); // 定义线程函数的类型,自己调整
+    using func_t = std::function<void(const std::string &)>; // 返回值为void，参数为空的函数类型。
 
     class Thread
     {
@@ -26,14 +15,15 @@ namespace ThreadMoudle
         void Excute()
         {
             // 解耦合
+            std::cout << _name << " is running" << std::endl;
             _isRunning = true;
-            this->_task(_td);
+            _task(_name);
             _isRunning = false;
         }
 
     public:
-        Thread(const std::string &name, func_t func, ThreadData *td)
-            : _name(name), _task(func), _td(td)
+        Thread(const std::string &name, func_t func)
+            : _name(name), _task(func)
         {
             std::cout << "Create a thread" << _name << std::endl;
         }
@@ -65,7 +55,6 @@ namespace ThreadMoudle
         {
             ::pthread_join(_tid, nullptr);
             std::cout << _name << " Joined" << std::endl;
-            delete _td;
         }
 
         ~Thread()
@@ -77,6 +66,5 @@ namespace ThreadMoudle
         pthread_t _tid;
         bool _isRunning;
         func_t _task;
-        ThreadData *_td;
     };
 }
