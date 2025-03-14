@@ -57,6 +57,11 @@ namespace ThreadMoudle
             std::cout << _name << " Joined" << std::endl;
         }
 
+        std::string Name()
+        {
+            return _name;
+        }
+
         ~Thread()
         {
         }

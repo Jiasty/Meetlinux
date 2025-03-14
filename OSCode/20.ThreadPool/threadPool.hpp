@@ -6,8 +6,10 @@
 #include <unistd.h>
 #include "myThread.hpp"
 #include "Task.hpp"
+#include "Log.hpp"
 
 using namespace ThreadMoudle;
+using namespace log_ns;
 
 static const int defaultNum = 5;
 
@@ -51,13 +53,15 @@ private:
             while (isEmpty() && _isrunning) // while防止伪唤醒！队列为空，但是不退出才等。
             {
                 _sleepNum++; // 进来在条件变量下等待肯定就休眠了，计数器加加。
-                Sleep();     // 去条件变量下休眠。
+                LOG(INFO, "%s thread sleep begin!\n", name.c_str());
+                Sleep(); // 去条件变量下休眠。
+                LOG(INFO, "%s thread wakeup!\n", name.c_str());
                 _sleepNum--;
             }
             // 不为空 || 想退出，其实只需要判定队列为空且想退出，此时无未完成任务，且想退出，线程就退出。
-            if (isEmpty() && !_isrunning) //此时_isrunning = false, !_isrunning表示想退出，为true。
+            if (isEmpty() && !_isrunning) // 此时_isrunning = false, !_isrunning表示想退出，为true。
             {
-                std::cout << name << "quie" << std::endl;
+                LOG(INFO, "%s thread quit\n", name.c_str());
                 UnlockQueue();
                 break;
             }
@@ -68,13 +72,14 @@ private:
             UnlockQueue();
             // 取出任务，只属于自己，执行任务
             t(); // 不能在临界区执行，占用临界区，阻碍了其他线程取任务。
-            std::cout << t.debug() << std::endl;
-            std::cout << name << ": " << t.result() << std::endl
-                      << std::endl;
+            LOG(DEBUG, "hander task done, task is : %s\n", t.result().c_str());
+            // std::cout << t.debug() << std::endl;
+            // std::cout << name << ": " << t.result() << std::endl
+            //           << std::endl;
         }
     }
 
-public:
+    // 单例模式不能公有构造函数，且不能支持拷贝构造，赋值构造
     ThreadPool(int threadNum = defaultNum)
         : _threadNum(threadNum),
           _isrunning(false),
@@ -83,6 +88,9 @@ public:
         pthread_mutex_init(&_mutex, nullptr);
         pthread_cond_init(&_cond, nullptr);
     }
+    ThreadPool(const ThreadPool<T> &tp) = delete;
+    ThreadPool<T> &operator=(const ThreadPool<T> &tp) = delete;
+
     void Init()
     {
         // 可以调用另一个类的函数模块。
@@ -93,6 +101,7 @@ public:
         {
             std::string name = "Thread-" + std::to_string(i + 1);
             _threads.emplace_back(name, func); // 使用目标构造函数在内部构造，减少值拷贝。
+            LOG(DEBUG, "construct thread %s done, init success\n", name.c_str());
         }
     }
 
@@ -103,16 +112,19 @@ public:
         for (auto &thread : _threads)
         {
             thread.Start();
+            LOG(DEBUG, "start thread %s done.\n", thread.Name().c_str());
         }
     }
 
+public:
     void Stop()
     {
         // 可能也要对其加锁。
         LockQueue();
-        _isrunning = false; // 设为false时有可能所有线程都在休眠，可能都判断不了，所以要将他们全部唤醒。
-        WakeupAll();
+        _isrunning = false;
+        WakeupAll(); // 设为false时有可能所有线程都在休眠，可能都判断不了，所以要将他们全部唤醒。
         UnlockQueue();
+        LOG(INFO, "Thread Pool Stop Success!\n");
     }
 
     void Push(const T &in)
@@ -126,6 +138,32 @@ public:
                 Wakeup();      // 对条件变量的封装。
         }
         UnlockQueue();
+    }
+
+    // 向外提供一个获取单例的接口，不然外部无法构造。
+    // 这个函数使用了静态成员，它必须也是静态的。
+    // 如果是多线程获取单例呢？
+    static ThreadPool<T> *GetInstance()
+    {
+        if (_tp == nullptr) // 此层判断是为了创建好后，其他线程进入时不用再次加锁并判断浪费时间。
+        {
+            // 饿汉模式，优化程序启动时间。
+            LockGuard lockguard(&_sigmutex);
+            if (_tp == nullptr) // 第一次使用，创建单例
+            {
+                LOG(INFO, "create a threadpool\n");
+                // 第一个线程执行到这被切走，多个线程进来，就会出错，要加锁。
+                _tp = new ThreadPool();
+                _tp->Init();
+                _tp->Start();
+            }
+            else
+            {
+                LOG(INFO, "get a threadpool\n");
+            }
+        }
+
+        return _tp;
     }
 
     ~ThreadPool()
@@ -144,4 +182,15 @@ private:
 
     pthread_mutex_t _mutex;
     pthread_cond_t _cond;
+
+    // 单例模式
+    static ThreadPool<T> *_tp; // 为什么要用静态成员？
+    // volatile static ThreadPool<T> *_tp;
+    static pthread_mutex_t _sigmutex; // 单例的锁
 };
+
+template <typename T>
+ThreadPool<T> *ThreadPool<T>::_tp = nullptr; // 第二个ThreadPool<T>是作用域
+// volatile ThreadPool<T> *ThreadPool<T>::_tp = nullptr;
+template <typename T>
+pthread_mutex_t ThreadPool<T>::_sigmutex = PTHREAD_MUTEX_INITIALIZER;
