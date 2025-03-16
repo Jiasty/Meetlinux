@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <functional>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,20 +17,24 @@ using namespace log_ns;
 static const int gsockfd = -1;
 static const uint16_t glocalport = 8888;
 
+using func_t = std::function<std::string(std::string)>;
+
 enum
 {
     SOCKET_ERROR = 1,
     BIND_ERROR
 
 };
-
+// 一般服务器主要是用来进行网络数据读取和写入的。IO的
+// 服务器IO逻辑 和 业务逻辑 解耦(回调函数)
 class UdpServer : public nocopy // 单例
 {
 public:
-    UdpServer(uint16_t localport = glocalport)
+    UdpServer(func_t func, uint16_t localport = glocalport)
         : _sockfd(gsockfd),
           _localport(localport),
-          _isrunning(false)
+          _isrunning(false),
+          _func(func)
     {
     }
     void InitServer()
@@ -71,16 +76,15 @@ public:
             ssize_t n = ::recvfrom(_sockfd, inbuffer, sizeof(inbuffer) - 1, 0, (struct sockaddr*)&peer, &len);
             if(n > 0) //读取成功
             {
-                // uint16_t peerport = ntohs(peer.sin_port);
-                // std::string peerip = inet_ntoa(peer.sin_addr);
                 InetAddr addr(peer);
                 //处理数据后发送
                 inbuffer[n] = 0; //设置'\0'，形成字符串。
+                //一个一个单词
                 std::cout << "[" << addr.Ip() << " : "<< addr.Port() << "]say# " << inbuffer << std::endl;
-                std::string echo_str = "[udp_server echo]#";
-                echo_str += inbuffer;
-
-                ::sendto(_sockfd, echo_str.c_str(), echo_str.size(), 0, (struct sockaddr*)&peer, len);
+                
+                std::string ret = _func(inbuffer); //回调函数，还要返回
+                //已经完成了翻译，但是udpserver不知道干了啥,解耦。
+                ::sendto(_sockfd, ret.c_str(), ret.size(), 0, (struct sockaddr*)&peer, len);
             }
             sleep(1);
         }
@@ -96,4 +100,6 @@ private:
     uint16_t _localport;  // 本地端口号
     //std::string _localip; // 本机ip，网络通信时是当四字节来使用的，不是字符串。TODO
     bool _isrunning;      // 服务状态
+
+    func_t _func;
 };
