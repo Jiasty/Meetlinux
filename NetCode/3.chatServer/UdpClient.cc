@@ -9,12 +9,12 @@
 
 using namespace ThreadMoudle;
 
-int InitClient(int argc, char *argv[])
+int InitClient()
 {
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0)
     {
-        std::cerr << "socket error" << std::endl;
+        std::cerr << "create socket error" << std::endl;
         exit(1);
     }
     return sockfd;
@@ -54,6 +54,7 @@ void SendMessage(int sockfd, std::string serverip, uint16_t serverport, const st
     {
         std::string message;
         std::cout << client_profix;
+        fflush(stdout);
         std::getline(std::cin, message);
 
         int n = sendto(sockfd, message.c_str(), message.size(), 0, (struct sockaddr *)&server, sizeof(server)); // 要知道发给谁
@@ -72,16 +73,16 @@ int main(int argc, char *argv[])
     // 客户端未来一定要知道服务器的ip地址和端口号
     std::string server_ip = argv[1];
     uint16_t server_port = std::stoi(argv[2]);
+    int sockfd = InitClient();
 
-    int sockfd = InitClient(argc, argv);
     Thread recvr("recvr-thread", std::bind(RecvMessage, sockfd, std::placeholders::_1));
     Thread sender("sender-thread", std::bind(SendMessage, sockfd, server_ip, server_port, std::placeholders::_1));
 
     recvr.Start();
     sender.Start();
 
-    recvr.Stop();
-    sender.Stop();
+    recvr.Join();
+    sender.Join();
 
     ::close(sockfd);
 

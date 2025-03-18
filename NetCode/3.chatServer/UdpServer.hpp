@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include "nocopy.hpp"
 #include "Log.hpp"
 #include "InetAddr.hpp"
@@ -74,7 +75,7 @@ public:
             {
                 InetAddr addr(peer);
                 inbuffer[n] = 0;
-                LOG(DEBUG, "[%s]# %s\n", addr.AddrStr().c_str(), inbuffer);
+                LOG(DEBUG, "[%s]# %s", addr.AddrStr().c_str(), inbuffer);
                 _func(_sockfd, inbuffer, addr);
                 LOG(DEBUG, "return udpserver\n");
             }
@@ -83,11 +84,12 @@ public:
                 LOG(ERROR, "recvfrom ,  error");
             }
         }
+        _isrunning = false;
     }
 
     ~UdpServer()
     {
-        if (_sockfd > 0)
+        if (_sockfd > gsockfd)
             ::close(_sockfd);
     }
 
@@ -95,6 +97,7 @@ private:
     int _sockfd;         // 读写使用同一个sockfd，反应UDP是全双工通信。
     uint16_t _localport; // 本地端口号
     // std::string _localip; // 本机ip，网络通信时是当四字节来使用的，不是字符串。TODO
+    // 服务端绑定ip，指定在哪个网络接口上接收客户端的消息。为了接收所有的服务端，一般绑定为0。
     bool _isrunning; // 服务状态
 
     server_t _func;

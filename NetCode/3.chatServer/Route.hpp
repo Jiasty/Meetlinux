@@ -5,11 +5,9 @@
 #include <functional>
 #include <pthread.h>
 #include "InetAddr.hpp"
-#include "Log.hpp"
 #include "threadPool.hpp"
 #include "lockGuardian.hpp"
 
-using namespace log_ns;
 using task_t = std::function<void()>;
 
 // class User
@@ -42,7 +40,7 @@ public:
 
     void Offline(InetAddr &who)
     {
-        LockGuard lock(&_mutex);
+        LockGuard lockguard(&_mutex);
         for (auto iter = _onlineUser.begin(); iter != _onlineUser.end(); iter++)
         {
             if (*iter == who)
@@ -60,6 +58,8 @@ public:
         LockGuard lock(&_mutex);
         for (auto &user : _onlineUser)
         {
+            if (user == who)
+                continue; // 不给自己转发。
             struct sockaddr_in peer = user.Addr();
             LOG(DEBUG, "send a message %s to %s", send_message.c_str(), user.AddrStr().c_str());
             ::sendto(sockfd, send_message.c_str(), send_message.size(), 0, (struct sockaddr *)&peer, sizeof(peer));

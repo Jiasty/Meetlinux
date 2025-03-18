@@ -13,8 +13,6 @@ namespace ThreadMoudle
     public:
         void Excute()
         {
-            // 解耦合
-            std::cout << _name << " is running" << std::endl;
             _isRunning = true;
             _task(_name);
             _isRunning = false;

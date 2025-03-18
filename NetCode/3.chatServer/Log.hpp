@@ -1,175 +1,174 @@
 #pragma once
+
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 #include <ctime>
 #include <cstdarg>
 #include <fstream>
 #include <cstring>
-#include <sys/types.h>
-#include <unistd.h>
+#include <pthread.h>
 #include "lockGuardian.hpp"
-
-#define MINITOR 1
-#define FILE 2
-
-const std::string file = "./log.txt";
-pthread_mutex_t gmutex = PTHREAD_MUTEX_INITIALIZER;
 
 namespace log_ns
 {
+
     enum
     {
-        DEBUG = 1, // 不初始化默认为0
+        DEBUG = 1,
         INFO,
         WARNING,
         ERROR,
-        FATAL,
+        FATAL
     };
 
-    std::string LeveltoString(int level)
+    std::string LevelToString(int level)
     {
         switch (level)
         {
-        case 1:
+        case DEBUG:
             return "DEBUG";
-        case 2:
+        case INFO:
             return "INFO";
-        case 3:
+        case WARNING:
             return "WARNING";
-        case 4:
+        case ERROR:
             return "ERROR";
-        case 5:
+        case FATAL:
             return "FATAL";
         default:
-            return "UNKNONE";
+            return "UNKNOWN";
         }
     }
 
-    std::string GetcurTime()
+    std::string GetCurrTime()
     {
-        time_t now = time(nullptr); // 获取时间戳，将其转化为我们认识的时间。
-        struct tm *curTime = localtime(&now);
+        time_t now = time(nullptr);
+        struct tm *curr_time = localtime(&now);
         char buffer[128];
         snprintf(buffer, sizeof(buffer), "%d-%02d-%02d %02d:%02d:%02d",
-                 curTime->tm_year + 1900,
-                 curTime->tm_mon + 1,
-                 curTime->tm_mday,
-                 curTime->tm_hour,
-                 curTime->tm_min,
-                 curTime->tm_sec);
+                 curr_time->tm_year + 1900,
+                 curr_time->tm_mon + 1,
+                 curr_time->tm_mday,
+                 curr_time->tm_hour,
+                 curr_time->tm_min,
+                 curr_time->tm_sec);
         return buffer;
     }
 
-    class LogMessage
+    class logmessage
     {
     public:
         std::string _level;
         pid_t _id;
         std::string _filename;
         int _filenumber;
-        std::string _curTime;
-        std::string _message;
+        std::string _curr_time;
+        std::string _message_info;
     };
 
+#define SCREEN_TYPE 1
+#define FILE_TYPE 2
+
+    const std::string glogfile = "./log.txt";
+    pthread_mutex_t glock = PTHREAD_MUTEX_INITIALIZER;
+
+    // log.logMessage("", 12, INFO, "this is a %d message ,%f, %s hellwrodl", x, , , );
     class Log
     {
     public:
-        Log(const std::string &logfile = file)
-            : _logfile(logfile),
-              _type(MINITOR)
+        Log(const std::string &logfile = glogfile) : _logfile(logfile), _type(SCREEN_TYPE)
         {
         }
-        void SwitchType(int type) // 切换打印模式
+        void Enable(int type)
         {
             _type = type;
         }
-        void FlushtoMinitor(LogMessage &log)
+        void FlushLogToScreen(const logmessage &lg)
         {
-            printf("[%s][%d][%s][%d][%s] %s\n",
-                   log._level.c_str(),
-                   log._id,
-                   log._filename.c_str(),
-                   log._filenumber,
-                   log._curTime.c_str(),
-                   log._message.c_str());
+            printf("[%s][%d][%s][%d][%s] %s",
+                   lg._level.c_str(),
+                   lg._id,
+                   lg._filename.c_str(),
+                   lg._filenumber,
+                   lg._curr_time.c_str(),
+                   lg._message_info.c_str());
         }
-        void FlushtoFile(LogMessage &log)
+        void FlushLogToFile(const logmessage &lg)
         {
-            std::ofstream out(_logfile, std::ios::app); // 追加打开
+            std::ofstream out(_logfile, std::ios::app);
             if (!out.is_open())
                 return;
-            char buffer[2048];
-            snprintf(buffer, sizeof(buffer), "[%s][%d][%s][%d][%s] %s\n",
-                     log._level.c_str(),
-                     log._id,
-                     log._filename.c_str(),
-                     log._filenumber,
-                     log._curTime.c_str(),
-                     log._message.c_str());
-
-            out.write(buffer, strlen(buffer)); // strlen不带\n
+            char logtxt[2048];
+            snprintf(logtxt, sizeof(logtxt), "[%s][%d][%s][%d][%s] %s",
+                     lg._level.c_str(),
+                     lg._id,
+                     lg._filename.c_str(),
+                     lg._filenumber,
+                     lg._curr_time.c_str(),
+                     lg._message_info.c_str());
+            out.write(logtxt, strlen(logtxt));
             out.close();
         }
-        void FlushLog(LogMessage &log)
+        void FlushLog(const logmessage &lg)
         {
-            // 可以加过滤，过滤掉不想判断的错误等级
+            // 加过滤逻辑 --- TODO
 
-            LockGuard lock(&gmutex); // 线程安全
+            LockGuard lockguard(&glock);
             switch (_type)
             {
-            case MINITOR:
-                FlushtoMinitor(log);
+            case SCREEN_TYPE:
+                FlushLogToScreen(lg);
                 break;
-            case FILE:
-                FlushtoFile(log);
+            case FILE_TYPE:
+                FlushLogToFile(lg);
                 break;
             }
         }
-        void writeMessage(std::string filename, int filenumber, int level, const char *format, ...)
+        void logMessage(std::string filename, int filenumber, int level, const char *format, ...)
         {
-            LogMessage lg;
-            lg._level = LeveltoString(level);
+            logmessage lg;
+
+            lg._level = LevelToString(level);
             lg._id = getpid();
             lg._filename = filename;
             lg._filenumber = filenumber;
-            lg._curTime = GetcurTime(); // 年-月-日 时:分:秒
+            lg._curr_time = GetCurrTime();
 
-            //@@@用户传参可变参数可能会有问题，捕获一下。
-            va_list ap; // char *的指针
+            va_list ap;
             va_start(ap, format);
             char log_info[1024];
-            vsnprintf(log_info, sizeof(log_info), format, ap); // 按照format格式将可变参数ap提出来放入log_info中
+            vsnprintf(log_info, sizeof(log_info), format, ap);
             va_end(ap);
+            lg._message_info = log_info;
 
-            lg._message = log_info;
-
-            // 打印log
+            // 打印出来日志
             FlushLog(lg);
         }
-
         ~Log()
         {
         }
 
     private:
-        int _type;            // 打印方式。
-        std::string _logfile; // 向文件打印时的文件路径，多线程时它就是临界资.
+        int _type;
+        std::string _logfile;
     };
 
     Log lg;
-    //@@@以后都不用手动传文件名和行号了。
-#define LOG(Level, Format, ...)                                            \
-    do                                                                     \
-    {                                                                      \
-        lg.writeMessage(__FILE__, __LINE__, Level, Format, ##__VA_ARGS__); \
+
+#define LOG(Level, Format, ...)                                        \
+    do                                                                 \
+    {                                                                  \
+        lg.logMessage(__FILE__, __LINE__, Level, Format, ##__VA_ARGS__); \
     } while (0)
 #define EnableScreen()          \
     do                          \
     {                           \
-        lg.SwitchType(MINITOR); \
+        lg.Enable(SCREEN_TYPE); \
     } while (0)
-#define EnableFILE()         \
-    do                       \
-    {                        \
-        lg.SwitchType(FILE); \
+#define EnableFILE()          \
+    do                        \
+    {                         \
+        lg.Enable(FILE_TYPE); \
     } while (0)
-}
+};

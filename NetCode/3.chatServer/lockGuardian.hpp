@@ -5,7 +5,7 @@
 class LockGuard
 {
 public:
-    LockGuard(pthread_mutex_t *mutex) : _mutex(mutex)
+    LockGuard(pthread_mutex_t *mutex):_mutex(mutex)
     {
         pthread_mutex_lock(_mutex);
     }
@@ -13,7 +13,6 @@ public:
     {
         pthread_mutex_unlock(_mutex);
     }
-
 private:
     pthread_mutex_t *_mutex;
 };
