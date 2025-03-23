@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <string>
 #include <sys/types.h>
@@ -24,15 +25,12 @@ private:
     }
 
 public:
-    InetAddr(const struct sockaddr_in &addr) : _addr(addr)
+    InetAddr(const struct sockaddr_in &addr):_addr(addr)
     {
         ToHost(addr);
     }
-    InetAddr()
-    {
-    }
 
-    bool operator==(const InetAddr &addr)
+    bool operator == (const InetAddr &addr)
     {
         return (this->_ip == addr._ip && this->_port == addr._port);
     }
