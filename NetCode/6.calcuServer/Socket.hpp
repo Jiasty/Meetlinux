@@ -171,7 +171,7 @@ namespace socket_ns
             if (n > 0)
             {
                 inbuffer[n] = 0; // 当字符串
-                *out += inbuffer;
+                *out += inbuffer; //下一次读不会覆盖之前的内容。
             }
             return n;
         }
