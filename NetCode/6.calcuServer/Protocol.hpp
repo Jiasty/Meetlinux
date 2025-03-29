@@ -6,7 +6,7 @@
 
 static const std::string sep = "\r\n";
 
-// 设计一下协议的报头和报文的完整格式, 保证读取报文的完整性！！！
+// 设计一下协议的报头和报文的完整格式, 保证读取报文的完整性！！！@@@
 // "len"\r\n"{json}"\r\n --- 完整的报文， len 有效载荷的长度！
 // \r\n: 区分len 和 json 串
 // \r\n: 暂是没有其他用，打印方便.
@@ -33,7 +33,7 @@ std::string Decode(std::string &packagestream)
         return std::string();
     // 找到第一个换行，截取len, (]
     std::string lenstr = packagestream.substr(0, pos);
-    int len = std::stoi(lenstr);
+    int len = std::stoi(lenstr); // 此处转整数还要做更严格的判断：是否都是数字字符！！！
 
     int totalSize = lenstr.size() + len + sep.size() * 2; // 完整报文的长度 "len"\r\n"{json}"\r\n
     if (packagestream.size() < totalSize)
@@ -110,7 +110,7 @@ public:
         return _operater;
     }
 
-    void SetValueAgain(int x, int y, char oper)
+    void SetValue(int x, int y, char oper)
     {
         _x = x;
         _y = y;

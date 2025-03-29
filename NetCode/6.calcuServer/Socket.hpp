@@ -54,10 +54,10 @@ namespace socket_ns
             CreateBindOrDie(port);
             CreateListenOrDie();
         }
-        void BuildClientSocket(std::string &server_ip, uint16_t server_port)
+        bool BuildClientSocket(std::string &server_ip, uint16_t server_port)
         {
             CreateSocketOrDie();
-            Connector(server_ip, server_port);
+            return Connector(server_ip, server_port);
         }
         // void BuildUdpSocket()
         // {}
@@ -170,8 +170,8 @@ namespace socket_ns
             ssize_t n = ::recv(_sockfd, inbuffer, sizeof(inbuffer) - 1, 0);
             if (n > 0)
             {
-                inbuffer[n] = 0; // 当字符串
-                *out += inbuffer; //下一次读不会覆盖之前的内容。
+                inbuffer[n] = 0;  // 当字符串
+                *out += inbuffer; // 下一次读不会覆盖之前的内容。
             }
             return n;
         }

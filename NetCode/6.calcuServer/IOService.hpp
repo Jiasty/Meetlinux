@@ -37,7 +37,9 @@ public:
             }
             // 读成功，不能保证是一个完整的报文。
             // LOG(INFO, "get packagestream %s from %s\n", packagestream.c_str(), addr.AddrStr().c_str());
-
+            std::cout << "--------------------------------------------" << std::endl;
+            std::cout << "packagestreamQueue:\n"
+                      << packagestreamQueue << std::endl;
             // 2.报文解析
             std::string packstr = Decode(packagestreamQueue);
             if (packstr.empty())
@@ -45,6 +47,8 @@ public:
 
             // 此时就是一个完整的报文
             auto request = Factory::BuildRequestDefault();
+            std::cout << "package: \n"
+                      << packstr << std::endl;
             // 3.反序列化
             request->Deserialize(packstr);
             // 4.业务处理(NetCalcu.hpp)
@@ -52,8 +56,12 @@ public:
             // 5.序列化应答
             std::string respjson;
             response->Serialize(&respjson);
+            std::cout << "respjson: \n"
+                      << respjson << std::endl;
             // 6.添加报头
             respjson = Encode(respjson);
+            std::cout << "respjson add header done: \n"
+                      << respjson << std::endl;
             // 7.发送应答
             sock->Send(respjson);
         }
