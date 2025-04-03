@@ -86,6 +86,8 @@ namespace socket_ns
                 LOG(FATAL, "create socket errror!\n");
                 exit(SOCKET_ERROR);
             }
+            int opt = 1;
+            setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
             LOG(INFO, "create socket success, sockfd: %d\n", _sockfd); // 3
         }
 
@@ -102,7 +104,7 @@ namespace socket_ns
                 LOG(FATAL, "bind error!\n");
                 exit(BIND_ERROR);
             }
-            LOG(INFO, "bind success!\n");
+            //LOG(INFO, "bind success!\n");
         }
 
         virtual void CreateListenOrDie(int backlog) override
@@ -113,7 +115,7 @@ namespace socket_ns
                 LOG(FATAL, "listen error!\n");
                 exit(LISTEN_ERROR);
             }
-            LOG(INFO, "listen success!\n");
+            //LOG(INFO, "listen success!\n");
         }
 
         virtual SockPtr Accepter(InetAddr *clientaddr) override
@@ -130,7 +132,7 @@ namespace socket_ns
                 return nullptr;
             }
             *clientaddr = InetAddr(client);
-            LOG(INFO, "get a new link! cilent info: %s, sockfd: %d\n", clientaddr->AddrStr().c_str(), sockfd);
+            LOG(INFO, "get a new link! cilent info: %s, sockfd: %d\n", clientaddr->AddrStr().c_str(), _sockfd);
 
             return std::make_shared<TcpSocket>(sockfd); // c++14
         }

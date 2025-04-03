@@ -2,7 +2,7 @@
 all: server
 
 server: Server.cc
-	g++ -o $@ $^ -std=c++14
+	g++ -o $@ $^ -std=c++14 -lpthread
 
 .PHONY:clean
 clean:

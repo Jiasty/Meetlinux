@@ -22,7 +22,13 @@ private:
         if (n > 0)
         {
             std::string response = tp->_self->_service(requeststr);
+            //  std::cout << std::endl;
+            // std::cout << "11111111111111111111111111" << std::endl;
+            // std::cout << response.c_str() << std::endl;
+            // std::cout << "11111111111111111111111111"  << std::endl;
+            // std::cout << std::endl;
             tp->_sockfd->Send(response);
+            
         }
 
         tp->_sockfd->Close();
@@ -74,11 +80,6 @@ public:
         }
         _isrunning = false;
     }
-
-    // 此时的任务处理在Command中
-    // void Service(int sockfd, InetAddr addr)
-    // {
-    // }
 
     ~TcpServer()
     {
