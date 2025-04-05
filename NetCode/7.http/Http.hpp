@@ -1,21 +1,22 @@
 #pragma once
-//#define TEST
+// #define TEST
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 const static std::string base_sep = "\r\n";
 const static std::string line_sep = ": ";
 const static std::string blank_sep = " ";
 const static std::string suffix_sep = ".";
+const static std::string methodInurl_sep = "?";
 const static std::string pref_path = "wwwroot"; // web根目录
 const static std::string httpversion = "HTTP/1.0";
 const static std::string homePage = "index.html";
 const static std::string _404Page = "404.html";
-
 
 class HttpRequest
 {
@@ -37,6 +38,17 @@ private:
         // 利用sstream头文件@@@?
         std::stringstream ss(_reqLine);
         ss >> _method >> _url >> _version; // 类似于cin>>依次输入给它们三个，按空格分开。
+
+        // /a/b/c.html  /login?user=xxx&passwd=12345 /register
+        if (strcasecmp(_method.c_str(), "GET") == 0)
+        {
+            auto pos = _url.find(methodInurl_sep);
+            if (pos != std::string::npos)
+            {
+                _bodyContent = _url.substr(pos + methodInurl_sep.size());
+                _url.resize(pos);
+            }
+        }
 
         _path += _url;
 
@@ -114,6 +126,18 @@ public:
     {
         return _suffix;
     }
+    std::string GetMethod()
+    {
+        LOG(DEBUG, "Client request method is %s\n", _method.c_str());
+        return _method;
+    }
+    std::string GetReqcontent()
+    {
+        LOG(DEBUG, "Client request method is %s, args: %s, request path: %s\n",
+            _method.c_str(), _bodyContent.c_str(), _path.c_str());
+        return _bodyContent;
+    }
+
     void Print()
     {
         std::cout << "----------------------------" << std::endl;
@@ -193,7 +217,7 @@ public:
             respstr += header;
         }
         respstr += base_sep;
-       // respstr += _blankLine;
+        // respstr += _blankLine;
         respstr += _resp_bodyContent;
         return respstr;
     }
@@ -213,6 +237,8 @@ private:
     std::string _descOfstatus;
     std::unordered_map<std::string, std::string> _headersKV;
 };
+
+using func_t = std::function<HttpResponse(HttpRequest)>;
 
 class HttpServer
 {
@@ -253,6 +279,8 @@ public:
         _statusCode_to_desc.insert(std::make_pair(100, "Continue"));
         _statusCode_to_desc.insert(std::make_pair(200, "OK"));
         _statusCode_to_desc.insert(std::make_pair(201, "Created"));
+        _statusCode_to_desc.insert(std::make_pair(301, "Moved Permanently"));
+        _statusCode_to_desc.insert(std::make_pair(302, "Found"));
         _statusCode_to_desc.insert(std::make_pair(404, "Not Found"));
     }
 
@@ -288,40 +316,77 @@ public:
 
         return resp;
 #else
-    // 更具体的属性
-    // std::string _method;
-    // std::string _url;
-    // std::string _path;
-    // std::string _suffix; // 资源后缀
-    // std::string _version;
-    // std::unordered_map<std::string, std::string> _headersKV;
+        // 更具体的属性
+        // std::string _method;
+        // std::string _url;
+        // std::string _path;
+        // std::string _suffix; // 资源后缀
+        // std::string _version;
+        // std::unordered_map<std::string, std::string> _headersKV;
+        std::cout << "---------------------------------------" << std::endl;
+        std::cout << reqstr;
+        std::cout << "---------------------------------------" << std::endl;
+
         HttpRequest req;
+        HttpResponse resp;
         req.Deserialize(reqstr);
+        req.GetReqcontent();
         // req.Print();
         // std::string url = req.Url();
         // std::string path = req.Path();
-        HttpResponse resp;
-        std::string content = GetFileContent(req.Path());
-        if (content.empty())
+        if (req.Path() == "wwwroot/redir")
         {
-            content = GetFileContent("wwwroot/404.html");
-            resp.AddStatuscode(404, _statusCode_to_desc[404]);
-            resp.Addheader("Content-Length", std::to_string(content.size())); //@@@?
-            resp.Addheader("Content-Type", _mime_type[".html"]);
-            resp.AddBodyText(content);
+            // 重定向处理
+            std::string redir_path = "https://www.bilibili.com"; // 要写全以什么协议访问，不然会404.
+            resp.AddStatuscode(302, _statusCode_to_desc[302]);
+            resp.Addheader("Location", redir_path);
+        }
+        else if (!req.GetReqcontent().empty())
+        {
+            // 带参数，请求某个服务。
+            if (isServiceExists(req.Path()))
+            {
+                resp = _service_list[req.Path()](req);
+            }
         }
         else
         {
-            resp.AddStatuscode(200, _statusCode_to_desc[200]);
-            resp.Addheader("Content-Length", std::to_string(content.size())); //@@@?
-            resp.Addheader("Content-Type", _mime_type[req.Suffix()]);
-            resp.AddBodyText(content);
+            std::string content = GetFileContent(req.Path());
+            if (content.empty())
+            {
+                content = GetFileContent("wwwroot/404.html");
+                resp.AddStatuscode(404, _statusCode_to_desc[404]);
+                resp.Addheader("Content-Length", std::to_string(content.size())); //@@@?
+                resp.Addheader("Content-Type", _mime_type[".html"]);
+                resp.AddBodyText(content);
+            }
+            else
+            {
+                resp.AddStatuscode(200, _statusCode_to_desc[200]);
+                resp.Addheader("Content-Length", std::to_string(content.size())); //@@@?
+                resp.Addheader("Content-Type", _mime_type[req.Suffix()]);
+                resp.Addheader("Set-Cookie", "username=Jiasty");
+                resp.AddBodyText(content);
+            }
         }
 
         return resp.Serialize();
 #endif
     }
 
+    void InsertService(const std::string serviceName, func_t f)
+    {
+        const std::string s = pref_path + serviceName;
+        _service_list[s] = f;
+    }
+    bool isServiceExists(const std::string serviceName)
+    {
+        auto iter = _service_list.find(serviceName);
+        if (iter == _service_list.end())
+            return false;
+        else
+            return true;
+    }
     ~HttpServer()
     {
     }
@@ -329,4 +394,5 @@ public:
 private:
     std::unordered_map<std::string, std::string> _mime_type; // Content-Type对照表
     std::unordered_map<int, std::string> _statusCode_to_desc;
+    std::unordered_map<std::string, func_t> _service_list;
 };
