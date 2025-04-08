@@ -46,7 +46,12 @@
         "typeinfo": "cpp",
         "cstring": "cpp",
         "ctime": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "set": "cpp",
+        "map": "cpp",
+        "sstream": "cpp"
     },
-    "C_Cpp.errorSquiggles": "enabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "editor.fontLigatures": false,
+    "editor.fontVariations": false
 }

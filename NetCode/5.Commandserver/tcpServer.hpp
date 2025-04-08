@@ -15,7 +15,7 @@
 using namespace log_ns;
 const static uint16_t gport = 8888;
 const static int gsockfd = -1;
-const static int gbacklog = 8; // 不能设置太大.
+const static int gbacklog = 8; // 等待连接队列的最大长度,不能设置太大.
 
 using command_service_t = std::function<void(int sockfd, InetAddr addr)>;
 
