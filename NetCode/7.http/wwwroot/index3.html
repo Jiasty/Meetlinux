@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>打地鼠小游戏</title>
+  <style>
+    body {
+      font-family: "Comic Sans MS", cursive;
+      background: #fceabb;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #444;
+      font-size: 2.5em;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .hole {
+      width: 100px;
+      height: 100px;
+      background: #8d6e63;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .mole {
+      width: 80px;
+      position: absolute;
+      bottom: -100%;
+      left: 10px;
+      transition: bottom 0.3s ease;
+    }
+
+    .up .mole {
+      bottom: 10px;
+    }
+
+    #score, #time {
+      font-size: 1.5em;
+      margin: 10px 0;
+    }
+
+    #start-btn {
+      padding: 10px 20px;
+      font-size: 1.2em;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #start-btn:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🐹 打地鼠小游戏</h1>
+  <div id="score">得分: 0</div>
+  <div id="time">剩余时间: 30s</div>
+  <button id="start-btn">开始游戏</button>
+
+  <div id="game">
+    <!-- 9 个洞 -->
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+    <div class="hole"><img class="mole" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" /></div>
+  </div>
+
+  <script>
+    const holes = document.querySelectorAll('.hole');
+    const scoreBoard = document.getElementById('score');
+    const timerDisplay = document.getElementById('time');
+    const startBtn = document.getElementById('start-btn');
+
+    let lastHole;
+    let timeUp = false;
+    let score = 0;
+    let gameTime = 30; // 秒
+
+    function randomTime(min, max) {
+      return Math.round(Math.random() * (max - min) + min);
+    }
+
+    function randomHole(holes) {
+      const idx = Math.floor(Math.random() * holes.length);
+      const hole = holes[idx];
+      if (hole === lastHole) {
+        return randomHole(holes);
+      }
+      lastHole = hole;
+      return hole;
+    }
+
+    function peep() {
+      const time = randomTime(400, 1000);
+      const hole = randomHole(holes);
+      hole.classList.add('up');
+      setTimeout(() => {
+        hole.classList.remove('up');
+        if (!timeUp) peep();
+      }, time);
+    }
+
+    function startGame() {
+      score = 0;
+      scoreBoard.textContent = '得分: 0';
+      timeUp = false;
+      startBtn.disabled = true;
+      peep();
+      let currentTime = gameTime;
+      timerDisplay.textContent = `剩余时间: ${currentTime}s`;
+      const countdown = setInterval(() => {
+        currentTime--;
+        timerDisplay.textContent = `剩余时间: ${currentTime}s`;
+        if (currentTime <= 0) {
+          timeUp = true;
+          clearInterval(countdown);
+          startBtn.disabled = false;
+          timerDisplay.textContent = `游戏结束！最终得分: ${score}`;
+        }
+      }, 1000);
+    }
+
+    function bonk(e) {
+      if (!e.isTrusted) return; // 防止脚本作弊
+      if (!this.parentNode.classList.contains('up')) return;
+      score++;
+      this.parentNode.classList.remove('up');
+      scoreBoard.textContent = `得分: ${score}`;
+    }
+
+    const moles = document.querySelectorAll('.mole');
+    moles.forEach(mole => mole.addEventListener('click', bonk));
+    startBtn.addEventListener('click', startGame);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>视频展览馆</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 30px;
+    }
+
+    .video-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-card video {
+      width: 100%;
+      height: auto;
+      background: #000;
+    }
+
+    .video-info {
+      padding: 15px;
+    }
+
+    .video-info h2 {
+      margin: 0 0 10px;
+      font-size: 1.2em;
+    }
+
+    .video-info p {
+      font-size: 0.95em;
+      color: #666;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #ecf0f1;
+      font-size: 0.9em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎬 视频展览馆</h1>
+    <p>欢迎浏览我们的视频作品集</p>
+  </header>
+
+  <main class="gallery">
+    <div class="video-card">
+      <video controls poster="https://via.placeholder.com/640x360?text=视频1">
+        <source src="video/a.mp4" type="video/mp4" />
+        您的浏览器不支持视频播放。
+      </video>
+      <div class="video-info">
+        <h2>紧缠缠</h2>
+        <p>这是一个进潺潺。</p>
+      </div>
+    </div>
+
+    <div class="video-card">
+      <video controls poster="https://via.placeholder.com/640x360?text=视频2">
+        <source src="video/c2.mp4" type="video/mp4" />
+      </video>
+      <div class="video-info">
+        <h2>手指甲</h2>
+        <p>艺术家做指甲。</p>
+      </div>
+    </div>
+
+    <!-- <div class="video-card">
+      <video controls poster="https://via.placeholder.com/640x360?text=视频3">
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+      </video>
+      <div class="video-info">
+        <h2>示例视频三</h2>
+        <p>这是一个使用公开链接的视频，可直接播放。</p>
+      </div>
+    </div> -->
+  </main>
+
+  <footer>
+    © 2025 视频展览馆. 版权所有.
+  </footer>
+
+</body>
+</html>

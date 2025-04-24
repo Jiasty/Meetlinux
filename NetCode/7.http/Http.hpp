@@ -15,7 +15,7 @@ const static std::string suffix_sep = ".";
 const static std::string methodInurl_sep = "?";
 const static std::string pref_path = "wwwroot"; // web根目录
 const static std::string httpversion = "HTTP/1.0";
-const static std::string homePage = "index.html";
+const static std::string homePage = "index2.html";
 const static std::string _404Page = "404.html";
 
 class HttpRequest
