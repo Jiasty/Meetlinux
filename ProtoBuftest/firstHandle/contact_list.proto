@@ -1,0 +1,10 @@
+// 首行：语法指定行
+syntax = "proto3";
+package contact_list;
+
+// 定义联系人message
+message PersonsInfo
+{
+    string name = 1; // 姓名,1标识一个字段编号
+    int32 age = 2; // 年龄
+}
